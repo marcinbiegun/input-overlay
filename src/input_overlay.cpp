@@ -34,6 +34,9 @@
 #include "util/log.h"
 #include "util/lang.h"
 #include "plugin-macros.generated.h"
+#ifdef IO_ENABLE_OPENXR
+#include "hook/openxr_hook_helper.hpp"
+#endif
 
 #ifdef LINUX
 
@@ -49,6 +52,9 @@ bool obs_module_load()
     binfo("Loading v%s-%s (%s) build time %s", PLUGIN_VERSION, GIT_BRANCH, GIT_COMMIT_HASH, BUILD_TIME);
     io_config::set_defaults();
     io_config::load();
+#ifdef IO_ENABLE_OPENXR
+    openxr_hook::start();
+#endif
 
     if (io_config::enable_overlay_source)
         sources::register_overlay_source();
@@ -59,6 +65,9 @@ bool obs_module_load()
         if (io_config::enable_websocket_server)
             wss::start();
         network::local_input = io_config::enable_gamepad_hook || io_config::enable_uiohook;
+#ifdef IO_ENABLE_OPENXR
+        network::local_input = true;
+#endif
         /* Input filtering via focused window title */
         if (io_config::enable_input_control)
             io_config::io_window_filters.read_from_config();
@@ -84,6 +93,9 @@ bool obs_module_load()
 
 void obs_module_unload()
 {
+#ifdef IO_ENABLE_OPENXR
+    openxr_hook::stop();
+#endif
     gamepad_hook::stop();
     uiohook::stop();
     wss::stop();

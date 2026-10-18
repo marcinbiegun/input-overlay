@@ -58,6 +58,11 @@ public:
 
     bool use_local_input();
 
+    bool has_gamepad_data() const
+    {
+        return gamepad || remote_input_data || data.gamepad_axis.count(gamepad_name) != 0;
+    }
+
     inline bool is_pad_button_pressed(int code)
     {
         // TODO: We might need to check if the map actually contains data at the index

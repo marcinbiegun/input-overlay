@@ -25,10 +25,47 @@
 #include <input_data.hpp>
 #include <QJsonObject>
 #include <QJsonDocument>
+#ifdef IO_ENABLE_OPENXR
+#include "input_hook_protocol.hpp"
+#include <QJsonArray>
+#endif
 
 namespace wss {
 
 std::atomic<bool> state = false;
+
+#ifdef IO_ENABLE_OPENXR
+void dispatch_openxr_event(const input_hook::snapshot &value)
+{
+    if (!state) return;
+    QJsonObject obj;
+    obj["event_source"] = "local";
+    obj["event_type"] = "vr_controller_state";
+    obj["process_id"] = static_cast<qint64>(value.process_id);
+    // Strings preserve all 64 bits for JavaScript clients.
+    obj["session_id"] = QString::number(value.session_id);
+    obj["sequence"] = QString::number(value.sequence);
+    obj["time"] = static_cast<double>(value.time_ms);
+    obj["focused"] = value.focused != 0;
+    QJsonArray hands;
+    for (unsigned i = 0; i < 2; ++i) {
+        const auto &state = value.hands[i];
+        QJsonObject hand;
+        hand["hand"] = i == 0 ? "left" : "right";
+        hand["active"] = static_cast<qint64>(state.active);
+        hand["buttons"] = static_cast<qint64>(state.buttons);
+        hand["trigger"] = state.trigger_value;
+        hand["squeeze"] = state.squeeze_value;
+        hand["stick_x"] = state.stick_x;
+        hand["stick_y"] = state.stick_y;
+        hands.append(hand);
+    }
+    obj["hands"] = hands;
+    const auto json = QJsonDocument(obj).toJson(QJsonDocument::Compact);
+    std::lock_guard<std::mutex> lock(mg::poll_mutex);
+    if (mg::can_queue_message()) mg::queue_message(json.toStdString());
+}
+#endif
 
 bool start()
 {

@@ -29,6 +29,9 @@
 #include "element/element_trigger.hpp"
 #include "../hook/gamepad_hook_helper.hpp"
 #include "../hook/uiohook_helper.hpp"
+#ifdef IO_ENABLE_OPENXR
+#include "../hook/openxr_hook_helper.hpp"
+#endif
 #include "log.h"
 #include "../network/remote_connection.hpp"
 #include "obs_util.hpp"
@@ -344,8 +347,10 @@ void overlay::refresh_data()
 {
     if (io_config::io_window_filters.input_blocked())
         return;
+#ifndef IO_ENABLE_OPENXR
     if (!(uiohook::state || wss::state || gamepad_hook::state))
         return;
+#endif
 
     /* This copies over necessary input data information
      * to make sure the overlay always has data available to
@@ -368,6 +373,9 @@ void overlay::refresh_data()
             m_settings->gamepad->mutex().unlock();
         }
         local_data::data.m_mutex.unlock();
+#ifdef IO_ENABLE_OPENXR
+        openxr_hook::copy_data(&m_settings->data, m_settings->gamepad_name);
+#endif
     } else if (wss::state) {
         if (m_settings->remote_input_data) {
             m_settings->remote_input_data->m_mutex.lock();

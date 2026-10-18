@@ -6,6 +6,10 @@ Show keyboard, mouse and gamepad input on stream.\
 Available for OBS Studio on Windows and Linux (64bit).
 Head over to [releases](https://github.com/univrsal/input-overlay/releases) for binaries.
 
+Windows builds also include an OpenXR controller input layer. See the
+[OpenXR setup and build instructions](openxr/openxr-layer-input-hook/README.md)
+for registration, supported controls, and current compatibility limits.
+
 ## [Wiki](https://github.com/univrsal/input-overlay/wiki)
 ## [Installation](https://github.com/univrsal/input-overlay/wiki/Installation)
 ## Credits

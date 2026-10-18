@@ -18,6 +18,9 @@
 
 #include "input_source.hpp"
 #include "../hook/gamepad_hook_helper.hpp"
+#ifdef IO_ENABLE_OPENXR
+#include "../hook/openxr_hook_helper.hpp"
+#endif
 #include "../util/lang.h"
 #include "../util/obs_util.hpp"
 #include "../util/settings.h"
@@ -28,6 +31,17 @@
 #include <obs-frontend-api.h>
 
 namespace sources {
+namespace {
+bool local_input_enabled()
+{
+#ifdef IO_ENABLE_OPENXR
+    return true;
+#else
+    return io_config::enable_gamepad_hook || io_config::enable_uiohook;
+#endif
+}
+}
+
 bool overlay_settings::use_local_input()
 {
     return selected_source.empty() || selected_source == T_LOCAL_SOURCE;
@@ -128,6 +142,13 @@ bool reload_pads(obs_properties_t *, obs_property_t *property, void *data)
     auto *src = static_cast<input_source *>(data);
     obs_property_list_clear(property);
 
+#ifdef IO_ENABLE_OPENXR
+    if (src->m_settings.use_local_input()) {
+        for (const auto &name : openxr_hook::controllers())
+            obs_property_list_add_string(property, name.c_str(), name.c_str());
+    }
+#endif
+
     if (src->m_settings.use_local_input() && gamepad_hook::state) {
         std::lock_guard<std::mutex> lock(gamepad_hook::local_gamepads->mutex());
         for (const auto &pad : gamepad_hook::local_gamepads->pads()) {
@@ -192,7 +213,7 @@ bool file_changed(void *d, obs_properties_t *props, obs_property_t *, obs_data_t
 bool reload_connections(obs_properties_t *, obs_property_t *list, void *)
 {
     obs_property_list_clear(list);
-    if (io_config::enable_gamepad_hook || io_config::enable_uiohook)
+    if (local_input_enabled())
         obs_property_list_add_string(list, T_LOCAL_SOURCE, "");
 
     network::remote_data_map_mutex.lock();
@@ -230,7 +251,7 @@ obs_properties_t *get_properties_for_overlay(void *data)
         auto *list = obs_properties_add_list(props, S_INPUT_SOURCE, T_INPUT_SOURCE, OBS_COMBO_TYPE_EDITABLE,
                                              OBS_COMBO_FORMAT_STRING);
         obs_properties_add_button(props, S_RELOAD_CONNECTIONS, T_RELOAD_CONNECTIONS, reload_connections);
-        if (io_config::enable_gamepad_hook || io_config::enable_uiohook)
+        if (local_input_enabled())
             obs_property_list_add_string(list, T_LOCAL_SOURCE, "");
 
         network::remote_data_map_mutex.lock();

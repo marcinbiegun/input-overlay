@@ -27,6 +27,9 @@
 #define WSS_PAD_RECONNECTED "gamepad_reconnected"
 
 struct input_data;
+#ifdef IO_ENABLE_OPENXR
+namespace input_hook { struct snapshot; }
+#endif
 namespace wss {
 
 extern std::atomic<bool> state;
@@ -35,4 +38,7 @@ void stop();
 
 void dispatch_uiohook_event(const uiohook_event *, const std::string &source_name);
 void dispatch_sdl_event(const SDL_Event *e, const std::string &source_name, input_data *data);
+#ifdef IO_ENABLE_OPENXR
+void dispatch_openxr_event(const input_hook::snapshot &value);
+#endif
 }

@@ -43,7 +43,7 @@ void element_trigger::draw(gs_effect_t *effect, gs_image_file_t *image, sources:
 {
     auto progress = 0.f;
 
-    if (settings->gamepad || settings->remote_input_data) {
+    if (settings->has_gamepad_data()) {
         switch (m_side) {
         case element_side::LEFT:
             progress = settings->pad_axis(SDL_GAMEPAD_AXIS_LEFT_TRIGGER);

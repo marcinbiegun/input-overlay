@@ -36,7 +36,7 @@ void element_analog_stick::draw(gs_effect_t *effect, gs_image_file_t *image, sou
     auto pos = m_pos;
     gs_rect *temp = settings->is_pad_button_pressed(m_keycode) ? &m_pressed : &m_mapping;
 
-    if (settings->gamepad || settings->remote_input_data) {
+    if (settings->has_gamepad_data()) {
         if (m_side == element_side::LEFT) {
             pos.x += settings->pad_axis(SDL_GAMEPAD_AXIS_LEFTX) * static_cast<float>(m_radius);
             pos.y += settings->pad_axis(SDL_GAMEPAD_AXIS_LEFTY) * static_cast<float>(m_radius);
